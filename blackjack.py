@@ -1,120 +1,160 @@
-# Game of Blackjack
-
-# Simplified Rules (10 pts possible):
-# - Human player gets the first two cards
-# - Human player plays the rest of their hand
-# - Then computer gets next two cards
-# - Computer must take cards score  >= 17
-# - Computer must stand when score >= 17
-# - Aces always count as 11
-# - Human player loses if their score is > 21
-# - Computer loses if computer score is > 21
-# - Human player wins immediately if their score is exactly 21
-# - Computer wins immediately if their score is exactly 21
-# - If computer score is betwen 17 and 20, winner is determined by score
-# - If it's a tie, nobody wins.
-
-# Grading:
-# - 5 points for allowing a human user to play their complete hand
-# - 5 points for allowing the computer to play its hand
-
-# (Optional) Extras
-# [You don't get extra credit for these, but they're fun.]
-# - 1. Aces should count as 1 if counting as 11 would have made the score > 21
-# - 2. Initally, human and dealer both get two cards; one dealer card is face up
-# - 3. Allow the user to play as many games as they want
-# - 4. Dealing cards to the cmputer should have a dramatic, 4-second delay
-
-# Here's the psuedocode we wrote on the board in class:
-
-## Get a deck of cards
-
-## Shuffle the deck
-
-## Deal the first two cards to user
-
-## User can choose to take cards as long as score < 21
-
-## If user goes over 21, game is over.
-
-## If user reaches 21, game is over.
-
-## If user stands with less than 21, then it's the dealer's turn:
-
-##    Computer takes two cards
-##    Computer must take more cards while computer score < 17
-##    If computer score reached 21, computer wins.
-##    If computer score goes over 21, computer loses.
-##    If computer score is 17 to 20, winner is determined by higher score.
-
-
-
-
-
+#generates a list of lists where each item represents a card and the corresponding value
+#I realize this adds complexity but the code is more flexible in case I want to build 
+#other card games in the future with more complicated scoring
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 import random
 import time
 
-SUITS = "\u2663 \u2665 \u2666 \u2660".split()
-FACES = "A 2 3 4 5 6 7 8 9 10 J Q K".split()
-
+suits = "\u2660 \u2665 \u2666 \u2663".split()
+ranks = "A,2,3,4,5,6,7,8,9,10,J,Q,K".split(",")
 deck = []
-for suit in SUITS:
-  for face in FACES:
-    deck.append(face+suit)
 
-random.shuffle(deck)
-
-def calculate_score(cards):
-  value = 0
-  for card in cards:
-    face = card[:-1]
-    if face in ['J', 'Q', 'K']:
-      points = 10
-    elif face == 'A':
-      points = 11
+for suit in suits:
+  for rank in ranks:
+    if rank in "2,3,4,5,6,7,8,9,10":
+      value = eval(rank)
+    elif rank  == "A":
+      value = 11
     else:
-      points = int(face)
-    value += points
-  return value
+      value = 10
+    card = [rank+suit,value]
+    deck.append(card)
 
-# Deal two cards
-hand = [deck.pop(0), deck.pop(0)]
-score = calculate_score(hand)
+#used 6 decks to prevent counting when multiple hands are played with the same shuffle
+decks = deck*6
+random.shuffle(decks)
 
-print("Your hand:", " ".join(hand))
+print("")
+print ("***********************BLACKJACK***********************")
+print("")
 
-while score < 21 and input("Do you want another card? (y/n) ") == 'y':
-  hand.append(deck.pop(0))
-  score = calculate_score(hand)
-  print("Your hand:", ", ".join(hand))
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+# I made a few small changes. The instructions say to deal the first two cards to the
+# player, but in a real game the cards are dealt one at a time so I made them alternate
+# I also made the dealer's second card face up 
+# ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-if score > 21:
-  print("You're busted!")
-elif score == 21:
-  print("You win!")
-else:
-  print("You have %s points." % score)
-  print()
-  dealer_hand = [deck.pop(0), deck.pop(0)]
-  dealer_score = calculate_score(dealer_hand)
-  print("Dealer has", " ".join(dealer_hand))
-  while dealer_score < 17:
-    print("The dealer will take another card...")
-    time.sleep(5)
-    dealer_hand.append(deck.pop(0))
-    dealer_score = calculate_score(dealer_hand)
-    print("Dealer now has", " ".join(dealer_hand))
-    time.sleep(3)
+def dealHand(): #this is the main function
 
-  if dealer_score > 21:
-    print("The dealer busted! You win!")
-  elif dealer_score == 21:
-    print("The dealer got 21! You lose.")
-  elif dealer_score > score:
-    print("You lost.")
-  elif dealer_score == score:
-    print("It's a tie.... nobody wins this time.")
+# these functions within the main function imitate actions needed in a blackjack game
+  def dealCard(player): #takes the first card in the shuffled decks, appends it to the player's hand and removes it from the deck
+    topCard = decks.pop(0)
+    player.append(topCard)
+
+  def score(player): #calculates the score for the player passed as the single parameter
+    total = 0
+    for i in player:
+      total += i[1]
+    return total
+
+  def showUsersHand(player): #tells the player their current hand and its total value
+    showing = []
+    for i in player:
+      showing.append(i[0])
+    print ("Your hand: ")
+    time.sleep(1)
+    print (showing)
+    print ("Your total is ",score(player))
+    print ("...")
+    time.sleep(1)
+
+  def showDealersHand(): #tells the player the dealer's hand and its total value
+    showing = []
+    for i in dealer:
+      showing.append(i[0])
+    time.sleep(1)
+    print ("dealer has:")
+    time.sleep(1)
+    print (showing)
+    print ("...")
+
+  def playAgain(): #asks the user if they want to play again and reinitiates the game
+    again = input("Would you like to play another hand? (y/n)").lower()
+    if again == 'y':
+      time.sleep(1)
+      print ()
+      print ("************************NEW HAND***********************")
+      print ()
+      time.sleep(1)
+      dealHand()
+    elif again == 'n':
+      print("Thank you for playing")
+    else:
+      playAgain()
+
+  def dealOut(): #dealer plays his hand out until he has 17 or busts
+    showDealersHand()
+    game = True
+    while game:
+      while score(dealer) < 17:
+        print ("Dealer draws...")
+        time.sleep(1)
+        print (decks[0][0])
+        dealCard(dealer)
+      time.sleep(1)
+      print ("Dealer has a total of ",score(dealer))
+      print ("")
+      if score(dealer) > 21:
+        print ("Dealer busts. You win!")
+        game = False
+      elif score(user) > score(dealer):
+        print ("You win!")
+        game = False
+      elif score(user) == score(dealer):
+        print ("Push")
+        game = False
+      else:
+        print ("Sorry, dealer wins :(")
+        game = False
+    playAgain()
+
+  def hit():
+    toHit = input("Would you like to hit or stay? (h/s)").lower()
+    if toHit == 'h':
+      print ("You draw...")
+      time.sleep(1)
+      print (decks[0][0])
+      dealCard(user)
+      showUsersHand(user)
+      if score(user) == 21:
+        print ("21. Perfect!")
+        dealOut()
+      elif score(user) > 21:
+        print ("Sorry, too many. You lose :(")
+        playAgain()
+      else:
+        hit()
+    elif toHit == 's':
+      dealOut()
+    else:
+      print ("Please enter h to hit or s to stay")
+      hit()
+
+# # This is where the "hand" actually starts. Each player's cards are cleared and
+# new ones are dealt from the top of the deck.  This SHOULD have logic to auto-
+# matically shuffle the decks whenever the decks get down to ~20% of the 
+# original length of the deck but I highly doubt anybody playing this game
+# will have the patience to get through 312 cards
+  user = []
+  dealer = []
+  dealCard(user)
+  dealCard(dealer)
+  dealCard(user)
+  dealCard(dealer)
+  showUsersHand(user)
+  print("Dealer shows ",dealer[1][0])
+  print ("...")
+  print ()
+  if score(user) == 21 and score(dealer) == 21:
+    print ("Push. Player and dealer both have 21")
+    playAgain()
+  elif score(user) == 21:
+    print ("Blackjack! you win!")
+    playAgain()
   else:
-    print("You win!")
+    hit()
+
+#calls the function to start the game
+dealHand()
 
 
